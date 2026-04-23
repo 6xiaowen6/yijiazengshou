@@ -1,15 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
-
-@font-face {
-  font-family: "Poppins-Regular_6";
-  src: url("/fonts/Poppins-Regular_6.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
 
 @theme inline {
   --font-sans: var(--fontSans);
@@ -53,7 +46,7 @@
 }
 
 :root {
-  --fontSans: "Poppins-Regular_6", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --fontSans: "Poppins", "PingFang SC", "Microsoft YaHei", sans-serif;
   --radius: 0.625rem;
   --background: #F5F7FA;
   --foreground: #1A1A2E;

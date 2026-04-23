@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Phone, Shield, ChevronRight } from "lucide-react";
-import { apiService } from "../lib/api";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -9,55 +8,21 @@ const LoginPage = () => {
   const [code, setCode] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleGetCode = async () => {
+  const handleGetCode = () => {
     if (phone.length < 11) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await apiService.sendVerificationCode(phone);
-      if (response.success) {
-        setCountdown(60);
-        const timer = setInterval(() => {
-          setCountdown((c) => {
-            if (c <= 1) { clearInterval(timer); return 0; }
-            return c - 1;
-          });
-        }, 1000);
-      } else {
-        setError(response.message || "发送验证码失败");
-      }
-    } catch (err) {
-      setError("网络错误，请重试");
-    } finally {
-      setLoading(false);
-    }
+    setCountdown(60);
+    const timer = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) { clearInterval(timer); return 0; }
+        return c - 1;
+      });
+    }, 1000);
   };
 
-  const handleLogin = async () => {
-    if (!agreed || phone.length < 11 || code.length < 4) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await apiService.login(phone, code);
-      if (response.success && response.token) {
-        // Store token in localStorage
-        localStorage.setItem('authToken', response.token);
-        navigate("/home");
-      } else {
-        setError(response.message || "登录失败");
-      }
-    } catch (err) {
-      setError("网络错误，请重试");
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    if (!agreed) return;
+    navigate("/home");
   };
 
   return (
@@ -134,20 +99,6 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div style={{
-            background: "#fee",
-            border: "1px solid #fcc",
-            borderRadius: "8px",
-            padding: "12px",
-            marginBottom: "16px",
-            color: "#c33"
-          }}>
-            {error}
-          </div>
-        )}
-
         {/* Code input */}
         <div style={{ marginBottom: "28px" }}>
           <div
@@ -172,20 +123,20 @@ const LoginPage = () => {
             />
             <button
               onClick={handleGetCode}
-              disabled={phone.length < 11 || countdown > 0 || loading}
+              disabled={phone.length < 11 || countdown > 0}
               style={{
-                background: countdown > 0 || phone.length < 11 || loading ? "var(--muted)" : "var(--blue-light)",
-                color: countdown > 0 || phone.length < 11 || loading ? "var(--muted-foreground)" : "var(--primary)",
+                background: countdown > 0 || phone.length < 11 ? "var(--muted)" : "var(--blue-light)",
+                color: countdown > 0 || phone.length < 11 ? "var(--muted-foreground)" : "var(--primary)",
                 border: "none",
                 borderRadius: "8px",
                 padding: "6px 12px",
                 fontSize: "13px",
                 fontWeight: "600",
-                cursor: phone.length < 11 || countdown > 0 || loading ? "not-allowed" : "pointer",
+                cursor: phone.length < 11 || countdown > 0 ? "not-allowed" : "pointer",
                 whiteSpace: "nowrap",
               }}
             >
-              {loading ? "发送中..." : countdown > 0 ? `${countdown}s` : "获取验证码"}
+              {countdown > 0 ? `${countdown}s` : "获取验证码"}
             </button>
           </div>
         </div>
@@ -222,13 +173,13 @@ const LoginPage = () => {
         <button
           className="btn-primary"
           onClick={handleLogin}
-          disabled={!agreed || phone.length < 11 || code.length < 4 || loading}
+          disabled={!agreed || phone.length < 11}
           style={{
-            opacity: agreed && phone.length >= 11 && code.length >= 4 && !loading ? 1 : 0.5,
-            cursor: agreed && phone.length >= 11 && code.length >= 4 && !loading ? "pointer" : "not-allowed",
+            opacity: agreed && phone.length >= 11 ? 1 : 0.5,
+            cursor: agreed && phone.length >= 11 ? "pointer" : "not-allowed",
           }}
         >
-          {loading ? "登录中..." : "登录 / 注册"}
+          登录 / 注册
         </button>
 
         {/* Other login */}

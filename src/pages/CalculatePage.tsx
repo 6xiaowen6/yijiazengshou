@@ -2,40 +2,43 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, ChevronRight, Info, TrendingDown } from "lucide-react";
 import { PageWrapper } from "../components/MobileFrame";
-import { apiService, type EarningsCalculation } from "../lib/api";
 
 const CalculatePage = () => {
   const navigate = useNavigate();
   const [calculated, setCalculated] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [calculationResult, setCalculationResult] = useState<EarningsCalculation | null>(null);
 
-  // Sample order parameters (in real app, this would come from previous page)
   const params = {
-    distance: 12.5,
-    revenue: 58.00,
-    timeSlot: "平峰",
+    mileage: 12.3,
+    duration: 24,
+    income: 38.50,
+    commission: 8.08,
+    commissionRate: 21,
+    timeSlot: "晚高峰",
     weather: "晴天",
+    mileageRange: "5-15km",
   };
 
-  const handleCalculate = async () => {
-    setLoading(true);
-    setError("");
+  const result = {
+    originalCommission: 8.08,
+    newCommission: 4.62,
+    originalRate: 21,
+    newRate: 12,
+    originalIncome: 30.42,
+    newIncome: 33.88,
+    increase: 3.46,
+    mileageBonus: -0.5,
+    timeBonus: -1.2,
+    weatherBonus: -0.2,
+    demandBonus: -1.64,
+  };
 
-    try {
-      const response = await apiService.calculateEarnings(params);
-      if (response.success && response.data) {
-        setCalculationResult(response.data);
-        setCalculated(true);
-      } else {
-        setError(response.message || "计算失败，请重试");
-      }
-    } catch (err) {
-      setError("网络错误，请重试");
-    } finally {
+  const handleCalculate = () => {
+    setLoading(true);
+    setTimeout(() => {
       setLoading(false);
-    }
+      setCalculated(true);
+    }, 1500);
   };
 
   const FactorRow = ({ label, desc, value, color }: { label: string; desc: string; value: string; color: string }) => (
@@ -55,26 +58,23 @@ const CalculatePage = () => {
         <div style={{ background: "var(--card)", borderRadius: "14px", padding: "14px 16px", marginBottom: "12px" }}>
           <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--foreground)", marginBottom: "10px" }}>当前订单参数</div>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <span className="badge-blue">{params.distance}km</span>
+            <span className="badge-blue">{params.mileage}km · {params.duration}分钟</span>
             <span className="badge-orange">{params.timeSlot}</span>
             <span className="badge-orange">{params.weather}</span>
+            <span className="badge-green">{params.mileageRange}</span>
           </div>
           <div style={{ display: "flex", gap: "16px", marginTop: "10px" }}>
             <div style={{ flex: 1, padding: "10px", background: "var(--blue-light)", borderRadius: "8px", textAlign: "center" }}>
-              <div style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>订单金额</div>
-              <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--primary)" }}>¥{params.revenue}</div>
+              <div style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>原始收入</div>
+              <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--primary)" }}>¥{params.income}</div>
             </div>
             <div style={{ flex: 1, padding: "10px", background: "var(--red-light)", borderRadius: "8px", textAlign: "center" }}>
               <div style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>原抽成</div>
-              <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--destructive)" }}>
-                ¥{calculationResult ? calculationResult.originalCommission.toFixed(2) : (params.revenue * 0.3).toFixed(2)}
-              </div>
+              <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--destructive)" }}>¥{params.commission}</div>
             </div>
             <div style={{ flex: 1, padding: "10px", background: "var(--orange-light)", borderRadius: "8px", textAlign: "center" }}>
-              <div style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>原抽成率</div>
-              <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--warning)" }}>
-                {calculationResult ? `${calculationResult.originalCommissionRate}%` : "30%"}
-              </div>
+              <div style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>抽成率</div>
+              <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--warning)" }}>{params.commissionRate}%</div>
             </div>
           </div>
         </div>
@@ -87,42 +87,28 @@ const CalculatePage = () => {
               <Info size={13} /> 规则说明
             </button>
           </div>
-          <FactorRow label="基础抽成率" desc="平台基准费率" value={`${calculationResult?.originalCommissionRate || 30}%`} color="var(--destructive)" />
-          <FactorRow label="时段调节" desc={`${params.timeSlot} 调节`} value={`${calculationResult ? (calculationResult.timeSlotFactor * 100).toFixed(1) : 0}%`} color={calculationResult && calculationResult.timeSlotFactor < 0 ? "var(--success)" : "var(--destructive)"} />
-          <FactorRow label="里程调节" desc={`${params.distance}km 调节`} value={`${calculationResult ? (calculationResult.mileageFactor * 100).toFixed(1) : 0}%`} color={calculationResult && calculationResult.mileageFactor < 0 ? "var(--success)" : "var(--destructive)"} />
-          <FactorRow label="供需调节" desc="当前供需比调节" value={`${calculationResult ? (calculationResult.demandFactor * 100).toFixed(1) : 0}%`} color={calculationResult && calculationResult.demandFactor < 0 ? "var(--success)" : "var(--destructive)"} />
+          <FactorRow label="基础抽成率" desc="平台基准费率" value="21%" color="var(--destructive)" />
+          <FactorRow label="时段调节" desc={`${params.timeSlot} 高峰优化`} value="-4%" color="var(--success)" />
+          <FactorRow label="里程调节" desc={`${params.mileageRange} 中程优化`} value="-3%" color="var(--success)" />
+          <FactorRow label="供需调节" desc="当前供需比优化" value="-2%" color="var(--success)" />
           <div style={{ marginTop: "10px", padding: "10px", background: "var(--green-light)", borderRadius: "8px", display: "flex", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <TrendingDown size={16} color="var(--success)" />
               <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--success)" }}>优化后抽成率</span>
             </div>
-            <span style={{ fontSize: "18px", fontWeight: "700", color: "var(--success)" }}>{calculationResult ? `${calculationResult.newCommissionRate.toFixed(2)}%` : "27.96%"}</span>
+            <span style={{ fontSize: "18px", fontWeight: "700", color: "var(--success)" }}>12%</span>
           </div>
         </div>
 
         {!calculated && !loading && (
-          <>
-            {error && (
-              <div style={{
-                background: "#fee",
-                border: "1px solid #fcc",
-                borderRadius: "8px",
-                padding: "12px",
-                marginBottom: "16px",
-                color: "#c33"
-              }}>
-                {error}
-              </div>
-            )}
-            <button
-              className="btn-primary"
-              onClick={handleCalculate}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "16px" }}
-            >
-              <Zap size={20} />
-              一键计算增收金额
-            </button>
-          </>
+          <button
+            className="btn-primary"
+            onClick={handleCalculate}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "16px" }}
+          >
+            <Zap size={20} />
+            一键计算增收金额
+          </button>
         )}
 
         {loading && (
@@ -140,20 +126,18 @@ const CalculatePage = () => {
             <div style={{ background: "var(--gradient-primary)", borderRadius: "16px", padding: "20px", marginBottom: "12px", textAlign: "center" }}>
               <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px", marginBottom: "6px" }}>本次预计增收金额</div>
               <div style={{ color: "white", fontSize: "40px", fontWeight: "700", lineHeight: "1.1" }}>
-                +¥<span>{calculationResult?.earnings.toFixed(2) || "0.00"}</span>
+                +¥<span>{result.increase.toFixed(2)}</span>
               </div>
-              <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "12px", marginTop: "8px" }}>
-                抽成从 {calculationResult?.originalCommissionRate || 30}% 降至 {calculationResult?.newCommissionRate.toFixed(2) || "27.96"}%
-              </div>
+              <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "12px", marginTop: "8px" }}>抽成从 {result.originalRate}% 降至 {result.newRate}%</div>
               <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginTop: "14px" }}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px" }}>原到手</div>
-                  <div style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>¥{calculationResult?.originalIncome.toFixed(2) || "0.00"}</div>
+                  <div style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>¥{result.originalIncome}</div>
                 </div>
                 <div style={{ width: "1px", background: "rgba(255,255,255,0.3)" }}></div>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px" }}>新到手</div>
-                  <div style={{ color: "rgba(18,201,142,1)", fontSize: "18px", fontWeight: "700" }}>¥{calculationResult?.newIncome.toFixed(2) || "0.00"}</div>
+                  <div style={{ color: "rgba(18,201,142,1)", fontSize: "18px", fontWeight: "700" }}>¥{result.newIncome}</div>
                 </div>
               </div>
             </div>

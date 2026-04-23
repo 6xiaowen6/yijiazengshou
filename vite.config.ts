@@ -14,10 +14,10 @@ const allLucideExports = Object.keys(lucideIcons).filter(
 
 // 扫描 src 目录，找出实际使用的 lucide 图标
 function getUsedLucideIcons() {
-  const usedIcons = new Set<string>();
+  const usedIcons = new Set();
   const srcPath = path.resolve(__dirname, "./src");
 
-  function scanDirectory(dir: string) {
+  function scanDirectory(dir) {
     if (!fs.existsSync(dir)) return;
 
     const files = fs.readdirSync(dir);
@@ -30,9 +30,7 @@ function getUsedLucideIcons() {
       } else if (/\.(tsx?|jsx?)$/.test(file)) {
         const content = fs.readFileSync(filePath, "utf-8");
 
-        // 匹配 JSX 标签和标识符使用
         for (const icon of allLucideExports) {
-          // 匹配: <IconName、{IconName、= IconName、: IconName 等
           const patterns = [
             new RegExp(`<${icon}[\\s/>]`, "g"),
             new RegExp(`[{\\s,=:]${icon}[\\s,})]`, "g"),
@@ -52,8 +50,10 @@ function getUsedLucideIcons() {
 
 const usedLucideIcons = getUsedLucideIcons();
 
-// https://vite.dev/config/
+// ✅ 关键就在这里
 export default defineConfig({
+  base: "./",  // ⭐⭐⭐ 加这一行就解决白屏问题
+
   plugins: [
     react(),
     tailwindcss(),
@@ -77,6 +77,7 @@ export default defineConfig({
       enableBuild: true,
     }),
   ],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
